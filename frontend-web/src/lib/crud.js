@@ -53,3 +53,20 @@ export async function deleteTask(data, table) {
         return true
     }
 }
+
+export async function selectLinked(id, taskType) {
+    const selectQuery = taskType + '(id, name)';
+    const equalsQuery = taskType.slice(0, -1) + '_id';
+    const { data, error } = await supabase
+        .from('goal_quest')
+        .select(selectQuery)
+        .eq(equalsQuery, id);
+    
+    console.log(data)
+    if (error) {
+        console.error('Supabase error:', error)
+        return alert(":(", error)
+    } else {
+        return data
+    }
+}

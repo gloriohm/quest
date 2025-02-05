@@ -9,6 +9,8 @@
         name: null
     });
     let selectedTask = $state('');
+    let targetGoal = $state('');
+    let linkedQuests = $state([]);
     let createCardOpen;
     let questSelected;
     let deleteCard;
@@ -68,6 +70,21 @@
         }
         deleteCard.close()
     }
+
+    async function handleLinkTask(goalID, questID) {
+        const table = "goal_quest"
+        const updateData = { goal_id: goalID, quest_id: questID }
+        const linkedTask = await crud.createTask(updateData, table)
+        if (linkedTask) {
+            linkedQuests.push(linkedTask[0]);
+        }
+    }
+
+    async function testLinkedFetch() {
+        linkedQuests = await crud.selectLinked(2, 'goals')
+        console.log($state.snapshot(linkedQuests))
+        console.log(linkedQuests.length)
+    }
 </script>
 
 <article class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-slate-400 p-4 border border-black max-w-sm min-h-80">
@@ -113,6 +130,21 @@
 <dialog bind:this={questSelected} class="modal bg-emerald-400 px-4 py-2">
     <h2>{selectedTask.name}</h2>
     <p>Various info about the quest, like its ID, which is {selectedTask.id}</p>
+    <p>Link quest:</p>
+    <select bind:value={targetGoal}>
+        {#each tasks.goals as goal}
+            <option value={goal.id}>{goal.name}</option>
+        {/each}
+    </select>
+    <button onclick={() => handleLinkTask(targetGoal, selectedTask.id)}>Link!</button>
+    <button onclick={() => testLinkedFetch()}>Test selectLinked</button>
+    {#if linkedQuests.length > 0}
+        <ul>
+            {#each linkedQuests as { goals: goal }}
+                <li>{goal.name}</li>
+            {/each}
+        </ul>
+    {/if}
     <form>
         <span>
             <button class="{style.btnSecondary}" onclick={() => questSelected.close()}>Close</button>

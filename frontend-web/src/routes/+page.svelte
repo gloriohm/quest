@@ -1,12 +1,19 @@
 <script>
     import * as crud from '$lib/crud.js';
-    import * as style from '$lib/styles.js'
-    import { questTypes } from '$lib/exportables/constants.js'
+    import * as style from '$lib/styles.js';
+    import { questTypes, priorities, typeJunctions, taskTemplates } from '$lib/exportables/constants.js';
+    import CreateCard from '$lib/components/CreateCard.svelte';
     const { data } = $props();
     let tasks = $state({quests: data.quests, dailies: data.dailies, goals: data.goals})
 
-    let newSideQuest = $state({
-        name: null
+    let newTaskVariables = $state({
+        name: null,
+        priority: 50,
+    });
+
+    let newSideQuestRelation = $state({
+        goal_id: null,
+        quest_id: null
     });
     let selectedTask = $state('');
     let targetGoal = $state('');
@@ -14,22 +21,34 @@
     let createCardOpen;
     let questSelected;
     let deleteCard;
-
     
-    let selectedQuestType = $state(questTypes[1].key)
+    
+    
+    let selectedQuestType = $state(questTypes[1].value);
 
     $effect(() => {
-        console.log($state.snapshot(selectedQuestType))
+        console.log($state.snapshot(linkedQuests))
     })
 
-    function openQuest(task) {
-        selectedTask = task
-        questSelected.showModal()
+    function constructTask(selectedQuestType, newTaskVariables) {
+        const template = taskTemplates[selectedQuestType] || {};
+        return Object.keys(template).reduce((obj, key) => {
+            obj[key] = newTaskVariables[key] ?? template[key]; // Use state value if available, otherwise default
+            return obj;
+        }, {});
     }
 
-    function openDelete(task, key) {
+
+    async function openQuest(task, type) {
+        const typeJunction = typeJunctions.find(j => j.type === type);
+        selectedTask = {...task, type: type};
+        linkedQuests = await crud.selectLinked(task.id, typeJunction);
+        questSelected.showModal();
+    }
+
+    function openDelete(task, value) {
         selectedTask = task
-        selectedQuestType = key
+        selectedQuestType = value
         deleteCard.showModal()
     }
 
@@ -38,13 +57,14 @@
     }
 
     async function handleCreateTask() {
-        const updateData = $state.snapshot(newSideQuest)
+        const snapshot = $state.snapshot(newTaskVariables)
         const updatedType = $state.snapshot(selectedQuestType)
+        const updateData = constructTask(updatedType, snapshot)
         const newTask = await crud.createTask(updateData, updatedType);
         if (newTask) {
             tasks[updatedType].push(newTask[0]);
         }
-        newSideQuest.name = null;
+        newTaskVariables.name = null;
         createCardOpen.close();
     }
 
@@ -75,32 +95,27 @@
         const table = "goal_quest"
         const updateData = { goal_id: goalID, quest_id: questID }
         const linkedTask = await crud.createTask(updateData, table)
+        console.log("linked task:", linkedTask[0])
         if (linkedTask) {
-            linkedQuests.push(linkedTask[0]);
+            linkedQuests.push({goals: linkedTask[0]})
         }
-    }
-
-    async function testLinkedFetch() {
-        linkedQuests = await crud.selectLinked(2, 'goals')
-        console.log($state.snapshot(linkedQuests))
-        console.log(linkedQuests.length)
     }
 </script>
 
 <article class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-slate-400 p-4 border border-black max-w-sm min-h-80">
-    {#each questTypes as { key, label } }
+    {#each questTypes as { value, label } }
         <h2>{label}:</h2>
-        {#if tasks[key]?.length}
-            {#each tasks[key] as task, index}
+        {#if tasks[value]?.length}
+            {#each tasks[value] as task, index}
             <div class="flex justify-between">
                 <p>
-                    <button onclick={() => openQuest(task)}>
+                    <button onclick={() => openQuest(task, value)}>
                         {index + 1} - {task.name}
                     </button>
                 </p>
                 <span>
-                    <button onclick={() => markTaskAsComplete(task, key, index)} class="{style.btnPrimary}">Complete</button>
-                    <button onclick={() => openDelete(task, key)} class="{style.btnSecondary}">Delete</button>
+                    <button onclick={() => markTaskAsComplete(task, value, index)} class="{style.btnPrimary}">Complete</button>
+                    <button onclick={() => openDelete(task, value)} class="{style.btnSecondary}">Delete</button>
                 </span>
             </div>
             {/each}
@@ -116,10 +131,15 @@
     <form class="flex flex-col">
         <select bind:value={selectedQuestType}>
             {#each questTypes as type}
-                <option value={type.key}>{type.label}</option>
+                <option value={type.value}>{type.label}</option>
             {/each}
         </select>
-        <input type="text" bind:value={newSideQuest.name} class="form-input rounded-sm px-2 py-1" />
+        <input type="text" bind:value={newTaskVariables.name} class="form-input rounded-sm px-2 py-1" />
+        <select bind:value={newTaskVariables.priority}>
+            {#each priorities as priority}
+                <option value={priority.value}>{priority.label}</option>
+            {/each}
+        </select>
         <span>
             <button class="{style.btnSecondary}" onclick={() => createCardOpen.close()}>Cancel</button>
             <button class="{style.btnPrimary}" onclick={() => handleCreateTask()}>Create!</button>
@@ -130,18 +150,19 @@
 <dialog bind:this={questSelected} class="modal bg-emerald-400 px-4 py-2">
     <h2>{selectedTask.name}</h2>
     <p>Various info about the quest, like its ID, which is {selectedTask.id}</p>
-    <p>Link quest:</p>
-    <select bind:value={targetGoal}>
-        {#each tasks.goals as goal}
-            <option value={goal.id}>{goal.name}</option>
-        {/each}
-    </select>
-    <button onclick={() => handleLinkTask(targetGoal, selectedTask.id)}>Link!</button>
-    <button onclick={() => testLinkedFetch()}>Test selectLinked</button>
+    {#if selectedTask.type !== "goals"}
+        <p>Link quest:</p>
+        <select bind:value={targetGoal}>
+            {#each tasks.goals as goal}
+                <option value={goal.id}>{goal.name}</option>
+            {/each}
+        </select>
+        <button onclick={() => handleLinkTask(targetGoal, selectedTask.id)}>Link!</button>
+    {/if}
     {#if linkedQuests.length > 0}
         <ul>
-            {#each linkedQuests as { goals: goal }}
-                <li>{goal.name}</li>
+            {#each linkedQuests as { goals }}
+                <li>{goals.name}</li>
             {/each}
         </ul>
     {/if}

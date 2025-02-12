@@ -9,6 +9,8 @@
     let newTaskVariables = $state({
         name: null,
         priority: 50,
+        deadline: null,
+        days: 127
     });
 
     let newSideQuestRelation = $state({

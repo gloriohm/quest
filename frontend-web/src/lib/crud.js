@@ -69,3 +69,9 @@ export async function selectLinked(id, typeJunction) {
         return data
     }
 }
+
+export async function upsertLinked(id, typeJunction) {
+    const { data, error } = await supabase
+        .from('goal_quest')
+        .insert([{ goal_id: id.goal_id, quest_id: id.quest_id }], { onConflict: ['goal_id', 'quest_id'] })
+}

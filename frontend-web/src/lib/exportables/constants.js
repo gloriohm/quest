@@ -64,6 +64,7 @@ export const taskTemplates = {
     quests: {
         name: null,
         priority: 50,
+        deadline: null,
     },
     goals: {
         name: null,
@@ -71,5 +72,6 @@ export const taskTemplates = {
     dailies: {
         name: null,
         priority: 50,
+        days: 127
     }
 };

@@ -1,4 +1,4 @@
 import { writable } from 'svelte/store';
 
-export const sideQuestStore = writable()
+export const taskStore = writable()
 

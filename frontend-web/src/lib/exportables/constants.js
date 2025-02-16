@@ -75,3 +75,13 @@ export const taskTemplates = {
         days: 127
     }
 };
+
+export const daysTemplate = [
+    { name: 'Mon', bit: 1, value: true },
+    { name: 'Tue', bit: 2, value: true },
+    { name: 'Wed', bit: 4, value: true },
+    { name: 'Thu', bit: 8, value: true },
+    { name: 'Fri', bit: 16, value: true },
+    { name: 'Sat', bit: 32, value: true },
+    { name: 'Sun', bit: 64, value: true },
+]

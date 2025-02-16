@@ -2,13 +2,13 @@
     import * as crud from '$lib/crud.js';
     import * as style from '$lib/styles.js';
     import { taskStore } from '$lib/stores/questStore.js';
-    import { questTypes, priorities, typeJunctions, taskTemplates } from '$lib/exportables/constants.js';
+    import { questTypes } from '$lib/exportables/constants.js';
     import CreateCard from '$lib/components/CreateCard.svelte';
     import DeleteCard from '$lib/components/DeleteCard.svelte';
     import UpdateCard from '$lib/components/UpdateCard.svelte';
     import CompleteButton from '$lib/components/CompleteButton.svelte';
+    import CreateUpdateCard from '$lib/components/CreateUpdateCard.svelte';
 
-    let selectedTask = $state('');
 
     $effect(() => {
         console.log($taskStore)
@@ -34,6 +34,7 @@
         {/if}
     {/each}
     <CreateCard />
+    <CreateUpdateCard />
 </article>
 
 

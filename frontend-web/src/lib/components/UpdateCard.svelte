@@ -29,10 +29,6 @@
             }
         }
     }
-
-    $effect(() => {
-        console.log($inspect(linkedQuests))
-    })
 </script>
 
 <button onclick={() => openQuest(task, value)}>

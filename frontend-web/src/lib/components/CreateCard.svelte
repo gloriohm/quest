@@ -5,12 +5,17 @@
     import { questTypes, priorities, taskTemplates } from '$lib/exportables/constants.js';
     let createCardState;
     let selectedQuestType = $state(questTypes[1].value);
+    let targetGoal = $state('')
 
     let newTaskVariables = $state({
         name: null,
         priority: 50,
         deadline: null,
         days: 127
+    });
+    let newSideQuestRelation = $state({
+        goal_id: null,
+        quest_id: null
     });
 
     function constructNewTask(selectedQuestType, newTaskVariables) {
@@ -47,6 +52,14 @@
             {/each}
         </select>
         <input type="text" bind:value={newTaskVariables.name} class="form-input rounded-sm px-2 py-1" />
+        {#if selectedQuestType !== "goals"}
+            <p>Link quest:</p>
+            <select bind:value={targetGoal}>
+                {#each $taskStore.goals as goal}
+                    <option value={goal.id}>{goal.name}</option>
+                {/each}
+            </select>
+        {/if}
         <select bind:value={newTaskVariables.priority}>
             {#each priorities as priority}
                 <option value={priority.value}>{priority.label}</option>

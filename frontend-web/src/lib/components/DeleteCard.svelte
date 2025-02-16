@@ -10,18 +10,20 @@
     }
 
     async function handleDeleteTask(selectedTask) {
+        const backupState = $taskStore;
         const deleteData = selectedTask.task
         const table = selectedTask.value
-        const deleteSuccess = await crud.deleteTask(deleteData, table);
-        if (deleteSuccess) {
-            taskStore.update(tasks => {
-                // Remove the task immutably by creating a new array
-                return {
-                    ...tasks,
-                    [table]: tasks[table].filter((_, i) => i !== selectedTask.index)
-                };
-            });
-            console.log("delete success:", deleteSuccess)
+        taskStore.update(tasks => {
+            // Remove the task immutably by creating a new array
+            return {
+                ...tasks,
+                [table]: tasks[table].filter(t => t.id !== selectedTask.task.id)
+            };
+        });
+        const deleteError = await crud.deleteTask(deleteData, table);
+        if (deleteError) {
+            console.log("function returned error:", deleteError)
+            taskStore.set(backupState);
         }
         deleteCardState.close()
     }

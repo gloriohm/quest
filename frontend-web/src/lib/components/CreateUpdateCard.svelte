@@ -17,7 +17,8 @@
         deadline: null,
         days: 127,
         before_time: null,
-        after_time: null
+        after_time: null,
+        freq_type: null
     });
 
     let newTaskRelation = $state({
@@ -111,6 +112,14 @@
                     class="w-full max-w-xs"
                     bind:value={newTaskVariables.after_time}
                 />
+            </label>
+            <label>
+                <div>Frequency type:</div>
+                <select bind:value={newTaskVariables.freq_type}>
+                        <option value=0>None</option>
+                        <option value=1>Every x day</option>
+                        <option value=2>X days between</option>
+                </select>
             </label>
         {/if}
         <span>
